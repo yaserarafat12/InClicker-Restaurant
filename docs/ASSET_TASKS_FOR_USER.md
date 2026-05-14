@@ -1,5 +1,14 @@
 # Asset Tasks For User
 
+Status: superseded by `ASSET_BIBLE.md` and `GPT_IMAGE_PROMPTS.md`.
+
+Use this file only as the quick MVP checklist. For full production, follow:
+
+- `docs/ART_DIRECTION.md`
+- `docs/ASSET_BIBLE.md`
+- `docs/ANIMATION_STRATEGY.md`
+- `docs/GPT_IMAGE_PROMPTS.md`
+
 Rin already generated placeholder art so the Unity scene can compile and build. These are not final visuals.
 
 Use this document as the manual asset-generation checklist.
@@ -179,4 +188,3 @@ Assets/Art/Characters/chef_male.png
 Assets/Art/Characters/chef_female.png
 Assets/Art/Characters/grandma_cook.png
 ```
-
