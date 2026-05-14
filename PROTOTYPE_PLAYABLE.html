@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>InResto — Restaurant Tycoon (Prototype)</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #1a0f07;
+    color: #fff;
+    font-family: 'Segoe UI', sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #game {
+    width: 390px;
+    height: 844px;
+    background: linear-gradient(180deg, #2d1a08 0%, #1a0d04 100%);
+    border-radius: 24px;
+    border: 2px solid #5a3a1a;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(255,140,0,0.3);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── TOP BAR ── */
+  #topbar {
+    background: rgba(0,0,0,0.5);
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #5a3a1a;
+  }
+  #cash-display {
+    font-size: 22px;
+    font-weight: 700;
+    color: #ffd700;
+    text-shadow: 0 0 10px rgba(255,215,0,0.5);
+    font-family: monospace;
+  }
+  #location-badge {
+    background: rgba(255,140,0,0.2);
+    border: 1px solid #ff8c00;
+    border-radius: 12px;
+    padding: 4px 10px;
+    font-size: 11px;
+    color: #ffb347;
+  }
+  #rps-display {
+    font-size: 11px;
+    color: #aaa;
+  }
+
+  /* ── ENERGY BAR ── */
+  #energy-wrapper {
+    padding: 8px 16px 4px;
+    background: rgba(0,0,0,0.3);
+  }
+  #energy-label {
+    font-size: 10px;
+    color: #aaa;
+    margin-bottom: 3px;
+    display: flex;
+    justify-content: space-between;
+  }
+  #energy-bar-bg {
+    background: #333;
+    border-radius: 6px;
+    height: 10px;
+    overflow: hidden;
+  }
+  #energy-bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #2196F3, #64B5F6);
+    transition: width 0.1s, background 0.3s;
+  }
+  #energy-bar-fill.almost {
+    background: linear-gradient(90deg, #FF9800, #FFB74D);
+  }
+  #energy-bar-fill.rush {
+    background: linear-gradient(90deg, #FF5722, #FF8A65);
+    animation: pulse 0.5s infinite alternate;
+  }
+  @keyframes pulse { from {opacity:1} to {opacity:0.6} }
+
+  /* ── WARTEG SCENE ── */
+  #scene {
+    flex: 1;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+    background: radial-gradient(ellipse at center, #3d2010 0%, #1a0a03 100%);
+  }
+  #scene::before {
+    content: '🏠';
+    position: absolute;
+    font-size: 80px;
+    top: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0.15;
+  }
+
+  /* Customer sprites */
+  .customer {
+    position: absolute;
+    font-size: 28px;
+    cursor: pointer;
+    transition: transform 0.1s;
+    animation: customerBob 2s ease-in-out infinite;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  }
+  .customer:hover { transform: scale(1.2); }
+  .customer.rush { animation-duration: 0.8s; }
+  @keyframes customerBob {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-4px); }
+  }
+
+  /* Chat bubble */
+  .chat-bubble {
+    position: absolute;
+    background: rgba(255,255,255,0.95);
+    color: #333;
+    border-radius: 12px;
+    padding: 6px 10px;
+    font-size: 11px;
+    max-width: 150px;
+    z-index: 100;
+    animation: bubbleIn 0.2s ease-out, bubbleOut 0.5s ease-in 2.5s forwards;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  @keyframes bubbleIn  { from { transform:scale(0); opacity:0 } to { transform:scale(1); opacity:1 } }
+  @keyframes bubbleOut { to   { opacity: 0; transform: translateY(-20px) } }
+
+  /* Money pop-ups */
+  .money-pop {
+    position: absolute;
+    color: #ffd700;
+    font-weight: 700;
+    font-size: 14px;
+    pointer-events: none;
+    animation: moneyFloat 1s ease-out forwards;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  }
+  @keyframes moneyFloat {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to   { opacity: 0; transform: translateY(-50px) scale(1.3); }
+  }
+
+  /* Tap ripple */
+  .tap-ripple {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid rgba(255,180,0,0.8);
+    pointer-events: none;
+    animation: rippleExpand 0.5s ease-out forwards;
+  }
+  @keyframes rippleExpand {
+    from { width:10px; height:10px; opacity:1; }
+    to   { width:60px; height:60px; opacity:0; }
+  }
+
+  /* Rush hour overlay */
+  #rush-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 100, 0, 0.15);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    border: 2px solid rgba(255,120,0,0.5);
+  }
+  #rush-overlay.active { opacity: 1; animation: rushPulse 1s infinite alternate; }
+  @keyframes rushPulse { from {background:rgba(255,100,0,0.1)} to {background:rgba(255,100,0,0.25)} }
+
+  /* Rush hour timer */
+  #rush-timer {
+    position: absolute;
+    top: 10px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,80,0,0.9);
+    border-radius: 20px;
+    padding: 4px 14px;
+    font-size: 13px;
+    font-weight: 700;
+    display: none;
+    z-index: 50;
+    box-shadow: 0 0 15px rgba(255,80,0,0.6);
+  }
+  #rush-timer.active { display: block; }
+
+  /* Bottleneck status */
+  #bottleneck-bar {
+    padding: 4px 16px;
+    font-size: 11px;
+    background: rgba(0,0,0,0.4);
+    text-align: center;
+    min-height: 22px;
+  }
+
+  /* ── UPGRADE CARDS ── */
+  #upgrade-panel {
+    background: rgba(0,0,0,0.6);
+    border-top: 1px solid #5a3a1a;
+    padding: 10px 12px;
+  }
+  .upgrade-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .pillar-card {
+    background: linear-gradient(135deg, #2a1a08, #1a0d04);
+    border: 1px solid #5a3a1a;
+    border-radius: 12px;
+    padding: 8px;
+    text-align: center;
+    transition: transform 0.1s;
+  }
+  .pillar-card.bottleneck { border-color: #ff8c00; box-shadow: 0 0 8px rgba(255,140,0,0.4); }
+  .pillar-card .icon { font-size: 22px; margin-bottom: 2px; }
+  .pillar-card .name { font-size: 9px; color: #aaa; margin-bottom: 2px; }
+  .pillar-card .level { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+  .pillar-card .progress-bg {
+    background: #333; border-radius: 4px; height: 4px; margin-bottom: 6px; overflow:hidden;
+  }
+  .pillar-card .progress-fill { height: 100%; border-radius: 4px; background: #4CAF50; }
+  .pillar-card .upgrade-btn {
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 5px 4px;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .pillar-card .upgrade-btn:hover { transform: scale(1.05); filter:brightness(1.2); }
+  .pillar-card .upgrade-btn:disabled { background: #555; cursor: default; filter: none; transform: none; }
+  .pillar-card .upgrade-btn.affordable { animation: btnGlow 2s infinite; }
+  @keyframes btnGlow { 0%,100%{box-shadow:0 0 0 rgba(76,175,80,0)} 50%{box-shadow:0 0 10px rgba(76,175,80,0.6)} }
+
+  /* ── VN OVERLAY ── */
+  #vn-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 200;
+    display: none;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  #vn-overlay.active { display: flex; }
+  #vn-bg { position: absolute; inset: 0; font-size: 100px; display:flex; align-items:center; justify-content:center; opacity:0.1; }
+  #vn-character { position: absolute; bottom: 200px; left: 50%; transform:translateX(-50%); font-size: 80px; }
+  #vn-dialog-box {
+    background: rgba(10,5,0,0.95);
+    border-top: 2px solid #ff8c00;
+    padding: 16px;
+    position: relative;
+    z-index: 10;
+  }
+  #vn-speaker { font-size: 13px; color: #ffb347; font-weight: 700; margin-bottom: 6px; }
+  #vn-text { font-size: 14px; line-height: 1.6; color: #f0e0c8; min-height: 60px; }
+  #vn-next {
+    margin-top: 12px;
+    width: 100%;
+    background: transparent;
+    border: 1px solid #ff8c00;
+    color: #ffb347;
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  #vn-next:hover { background: rgba(255,140,0,0.2); }
+
+  /* ── OFFLINE CLAIM ── */
+  #offline-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 300;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+  }
+  #offline-overlay.active { display: flex; }
+  #brankas { font-size: 80px; animation: brankasShake 0.5s ease 1s; cursor:default; }
+  @keyframes brankasShake { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-5deg)} 75%{transform:rotate(5deg)} }
+  #offline-amount { font-size: 28px; font-weight: 700; color: #ffd700; margin: 12px 0; }
+  #offline-duration { font-size: 13px; color: #aaa; margin-bottom: 20px; }
+  .claim-btn {
+    width: 280px;
+    padding: 14px;
+    border-radius: 14px;
+    border: none;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    margin: 6px 0;
+    transition: all 0.15s;
+  }
+  .claim-btn:hover { transform: scale(1.03); }
+  #btn-claim-1x { background: linear-gradient(135deg, #4CAF50, #2E7D32); color:#fff; }
+  #btn-claim-2x { background: linear-gradient(135deg, #FF9800, #E65100); color:#fff; }
+</style>
+</head>
+<body>
+<div id="game">
+
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <div>
+      <div id="cash-display">Rp 200.000</div>
+      <div id="rps-display">+Rp 0/detik</div>
+    </div>
+    <div id="location-badge">📍 Warteg Gang Sempit</div>
+  </div>
+
+  <!-- ENERGY BAR -->
+  <div id="energy-wrapper">
+    <div id="energy-label">
+      <span>⚡ Semangat Tim</span>
+      <span id="energy-pct">0%</span>
+    </div>
+    <div id="energy-bar-bg">
+      <div id="energy-bar-fill"></div>
+    </div>
+  </div>
+
+  <!-- WARTEG SCENE (tap area) -->
+  <div id="scene" onclick="handleSceneTap(event)">
+    <div id="rush-overlay"></div>
+    <div id="rush-timer">🔥 Rush Hour!</div>
+    <!-- Customers generated by JS -->
+  </div>
+
+  <!-- BOTTLENECK STATUS -->
+  <div id="bottleneck-bar">Upgrade pilar untuk mulai earning!</div>
+
+  <!-- UPGRADE CARDS -->
+  <div id="upgrade-panel">
+    <div class="upgrade-grid">
+      <!-- Dapur -->
+      <div class="pillar-card" id="card-dapur">
+        <div class="icon">🔥</div>
+        <div class="name">DAPUR</div>
+        <div class="level" id="lv-dapur">Lv. 1</div>
+        <div class="progress-bg"><div class="progress-fill" id="prog-dapur" style="width:5%"></div></div>
+        <button class="upgrade-btn" id="btn-dapur" onclick="upgrade('dapur')">
+          <span id="cost-dapur">Rp 10K</span>
+        </button>
+      </div>
+      <!-- Area Makan -->
+      <div class="pillar-card" id="card-makan">
+        <div class="icon">🪑</div>
+        <div class="name">AREA MAKAN</div>
+        <div class="level" id="lv-makan">Lv. 1</div>
+        <div class="progress-bg"><div class="progress-fill" id="prog-makan" style="width:5%"></div></div>
+        <button class="upgrade-btn" id="btn-makan" onclick="upgrade('makan')">
+          <span id="cost-makan">Rp 8K</span>
+        </button>
+      </div>
+      <!-- Kasir -->
+      <div class="pillar-card" id="card-kasir">
+        <div class="icon">💳</div>
+        <div class="name">KASIR</div>
+        <div class="level" id="lv-kasir">Lv. 1</div>
+        <div class="progress-bg"><div class="progress-fill" id="prog-kasir" style="width:5%"></div></div>
+        <button class="upgrade-btn" id="btn-kasir" onclick="upgrade('kasir')">
+          <span id="cost-kasir">Rp 9K</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VN OVERLAY -->
+  <div id="vn-overlay">
+    <div id="vn-bg"></div>
+    <div id="vn-character"></div>
+    <div id="vn-dialog-box">
+      <div id="vn-speaker">Narator</div>
+      <div id="vn-text">...</div>
+      <button id="vn-next" onclick="vnNext()">Lanjut ▶</button>
+    </div>
+  </div>
+
+  <!-- OFFLINE CLAIM -->
+  <div id="offline-overlay">
+    <div id="brankas">🏦</div>
+    <div id="offline-amount">Rp 0</div>
+    <div id="offline-duration">Warteg lo jalan selama ...</div>
+    <button class="claim-btn" id="btn-claim-1x" onclick="claimOffline(1)">KLAIM</button>
+    <button class="claim-btn" id="btn-claim-2x" onclick="claimOffline(2)">KLAIM 2X ✨</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  INRESTO — WEB PROTOTYPE
+//  Mirror of Unity C# logic — GDD v6.0 compliant
+// ═══════════════════════════════════════════════════════════════
+
+// ─── CONSTANTS ──────────────────────────────────────────────────
+const BASE_COSTS   = { dapur: 10000,  makan: 8000,   kasir: 9000  };
+const COST_MULT    = { dapur: 1.15,   makan: 1.18,   kasir: 1.16  };
+const BASE_RATE    = { dapur: 1.0,    makan: 0.9,    kasir: 0.8   };
+const RATE_GROWTH  = { dapur: 1.0,    makan: 1.15,   kasir: 1.0   }; // makan = exponential
+const PRICE_PER_DISH = 15000;
+const MAX_LEVEL    = 20;
+
+const LOCATIONS = [
+  { name: "Warteg Gang Sempit",      revMult: 1,    expandCost: 0,         maxLv: 20 },
+  { name: "Warteg Pinggir Jalan",    revMult: 5,    expandCost: 500000,    maxLv: 25 },
+  { name: "Warung Rakyat",           revMult: 10,   expandCost: 2000000,   maxLv: 35 },
+  { name: "Warung Keluarga",         revMult: 25,   expandCost: 10000000,  maxLv: 50 },
+  { name: "Restoran Sederhana",      revMult: 50,   expandCost: 50000000,  maxLv: 70 },
+  { name: "Restoran Kelas Menengah", revMult: 100,  expandCost: 250000000, maxLv: 90 },
+  { name: "Fine Dining",             revMult: 250,  expandCost: 1e9,       maxLv: 120 },
+  { name: "Franchise Nasional",      revMult: 500,  expandCost: 5e9,       maxLv: 150 },
+  { name: "Cabang Internasional",    revMult: 1000, expandCost: 25e9,      maxLv: 200 },
+  { name: "World Domination",        revMult: 2500, expandCost: 0,         maxLv: 999 },
+];
+
+const STORY_PANELS = [
+  { trigger: 'revenue', value: 1000000, speaker: "MC", bg: "🌅",  char: "😤",
+    lines: ["Rp 1 juta pertama! Gw nangis tapi senang.", "Nenek, gw mulai bisa bayar kontrakan!"] },
+  { trigger: 'revenue', value: 10000000, speaker: "Ojan", bg: "📱", char: "🤩",
+    lines: ["Bro, gw upload foto warteg lo. Udah 10.000 like nih!", "Lo bakal viral! Siap-siap antrean panjang besok."] },
+  { trigger: 'revenue', value: 100000000, speaker: "Nenek", bg: "🏡", char: "👵",
+    lines: ["Cu, nenek bangga. Dari dulu nenek tau kamu bisa.", "Bumbunya masih sama kayak resep nenek, kan?"] },
+  { trigger: 'location', value: 3, speaker: "Rin", bg: "✨", char: "😊",
+    lines: ["Selamat! Kamu udah punya Warung Rakyat sekarang.", "Gw siap bantu urus marketing dan operasional."] },
+];
+
+// ─── GAME STATE ──────────────────────────────────────────────────
+const state = {
+  cash: 200000,
+  lifetime: 0,
+  locationIdx: 0,
+  prestigeMult: 1,
+  levels: { dapur: 1, makan: 1, kasir: 1 },
+  energy: 0,
+  rushActive: false,
+  rushTimer: 0,
+  tickMs: 500,         // Game tick every 500ms
+  storyTriggered: new Set(),
+  vnQueue: [],
+  vnCurrent: null,
+  vnLineIdx: 0,
+  customers: [],
+};
+
+// ─── MATH HELPERS ────────────────────────────────────────────────
+function upgradeCost(pillar, level) {
+  return Math.floor(BASE_COSTS[pillar] * Math.pow(COST_MULT[pillar], level - 1));
+}
+
+function pillarRate(pillar, level) {
+  if (pillar === 'makan') return BASE_RATE.makan * Math.pow(RATE_GROWTH.makan, level - 1);
+  return BASE_RATE[pillar] * level; // dapur & kasir = linear
+}
+
+function effectiveRPS() {
+  const p = pillarRate('dapur', state.levels.dapur);
+  const c = pillarRate('makan', state.levels.makan);
+  const k = pillarRate('kasir', state.levels.kasir);
+  const eff = Math.min(p, c, k);
+  const loc = LOCATIONS[state.locationIdx];
+  const rush = state.rushActive ? 5 : 1;
+  return eff * PRICE_PER_DISH * loc.revMult * state.prestigeMult * rush / (1000 / state.tickMs);
+}
+
+function formatRp(n) {
+  if (isNaN(n)) return 'Rp 0';
+  if (n >= 1e12) return `Rp ${(n/1e12).toFixed(2)}T`;
+  if (n >= 1e9)  return `Rp ${(n/1e9).toFixed(2)}B`;
+  if (n >= 1e6)  return `Rp ${(n/1e6).toFixed(2)}M`;
+  if (n >= 1e3)  return `Rp ${(n/1e3).toFixed(1)}K`;
+  return `Rp ${Math.floor(n).toLocaleString('id')}`;
+}
+
+function formatDuration(s) {
+  if (s >= 86400) return `${Math.floor(s/86400)} hari ${Math.floor((s%86400)/3600)} jam`;
+  if (s >= 3600)  return `${Math.floor(s/3600)} jam ${Math.floor((s%3600)/60)} menit`;
+  return `${Math.floor(s/60)} menit`;
+}
+
+// ─── UPGRADE ─────────────────────────────────────────────────────
+function upgrade(pillar) {
+  const loc = LOCATIONS[state.locationIdx];
+  if (state.levels[pillar] >= loc.maxLv) return;
+  const cost = upgradeCost(pillar, state.levels[pillar]);
+  if (state.cash < cost) return;
+  state.cash -= cost;
+  state.levels[pillar]++;
+  updateCustomers();
+  refreshUI();
+  // Punch card
+  const card = document.getElementById('card-' + pillar);
+  card.style.transform = 'scale(0.95)';
+  setTimeout(() => card.style.transform = '', 150);
+}
+
+// ─── GAME TICK ───────────────────────────────────────────────────
+function gameTick() {
+  const income = effectiveRPS();
+  state.cash += income;
+  state.lifetime += income;
+
+  // Rush hour countdown
+  if (state.rushActive) {
+    state.rushTimer -= state.tickMs / 1000;
+    if (state.rushTimer <= 0) endRushHour();
+  }
+
+  // Story triggers
+  checkStoryTriggers();
+
+  // Expand check
+  checkExpand();
+
+  // Occasional money pop
+  if (Math.random() < 0.15 && income > 0) spawnMoneyPop(income);
+
+  refreshUI();
+}
+
+// ─── ENERGY / RUSH HOUR ──────────────────────────────────────────
+let tapCount = 0;
+let tapResetTimer = null;
+
+function handleSceneTap(e) {
+  // Anti-cheat: max 15 taps/second
+  tapCount++;
+  clearTimeout(tapResetTimer);
+  tapResetTimer = setTimeout(() => tapCount = 0, 1000);
+  if (tapCount > 15) return;
+
+  if (state.rushActive) return;
+
+  state.energy = Math.min(100, state.energy + 2);
+  spawnRipple(e.clientX, e.clientY, e.currentTarget);
+
+  if (state.energy >= 100) startRushHour();
+  else updateEnergyBar();
+}
+
+function startRushHour() {
+  state.rushActive = true;
+  state.rushTimer  = 10;
+  state.energy = 100;
+  document.getElementById('rush-overlay').classList.add('active');
+  document.getElementById('rush-timer').classList.add('active');
+  document.querySelectorAll('.customer').forEach(c => c.classList.add('rush'));
+}
+
+function endRushHour() {
+  state.rushActive = false;
+  state.energy = 0;
+  document.getElementById('rush-overlay').classList.remove('active');
+  document.getElementById('rush-timer').classList.remove('active');
+  document.querySelectorAll('.customer').forEach(c => c.classList.remove('rush'));
+  updateEnergyBar();
+}
+
+function updateEnergyBar() {
+  const fill = document.getElementById('energy-bar-fill');
+  const pct  = document.getElementById('energy-pct');
+  fill.style.width = state.energy + '%';
+  pct.textContent  = Math.round(state.energy) + '%';
+  fill.className   = 'energy-bar-fill' + (state.rushActive ? ' rush' : state.energy > 75 ? ' almost' : '');
+}
+
+// ─── CUSTOMERS ───────────────────────────────────────────────────
+const CUSTOMER_EMOJIS = ['👩','👨','🧑','👴','👵','🧔','👩‍🦱','👨‍🦳'];
+const SEAT_POSITIONS  = [
+  {x:40, y:60}, {x:100,y:80}, {x:170,y:55}, {x:230,y:75}, {x:290,y:60},
+  {x:60, y:150},{x:150,y:140},{x:240,y:155},{x:310,y:135},{x:330,y:70},
+  {x:30, y:200},{x:120,y:210},{x:200,y:195},{x:270,y:210},{x:340,y:200},
+];
+
+function updateCustomers() {
+  const capacity = 2 + Math.floor((state.levels.makan - 1) * 0.8);
+  const scene    = document.getElementById('scene');
+  // Remove excess
+  while (state.customers.length > capacity) {
+    const el = state.customers.pop();
+    if (el && el.parentNode) {
+      el.style.transition = 'opacity 0.3s, transform 0.3s';
+      el.style.opacity = '0';
+      el.style.transform = 'translateX(80px)';
+      setTimeout(() => el.remove(), 300);
+    }
+  }
+  // Add missing
+  while (state.customers.length < capacity) {
+    const idx  = state.customers.length;
+    const pos  = SEAT_POSITIONS[idx % SEAT_POSITIONS.length];
+    const emoji = CUSTOMER_EMOJIS[Math.floor(Math.random() * CUSTOMER_EMOJIS.length)];
+    const el = document.createElement('div');
+    el.className = 'customer';
+    el.textContent = emoji;
+    el.style.left  = pos.x + 'px';
+    el.style.top   = pos.y + 'px';
+    el.style.opacity = '0';
+    el.style.animationDelay = (Math.random() * 2) + 's';
+    el.onclick = (e) => { e.stopPropagation(); showBubble(el); };
+    scene.appendChild(el);
+    state.customers.push(el);
+    requestAnimationFrame(() => { el.style.transition='opacity 0.3s'; el.style.opacity='1'; });
+  }
+}
+
+const HAPPY = ['😋 Enak banget! Bumbu nenek kerasa!','😊 Porsi pas, harga terjangkau!','💯 5 bintang, recommended!','🤤 Mantap jiwa!'];
+const SLOW_K= ['😐 Nunggu lama nih...','⏰ Kapan makanannya?','😑 Dapur kewalahan?'];
+const SLOW_C= ['😡 Kasir lambat!','💸 Udah makan, antri bayar nih!'];
+
+function showBubble(el) {
+  const p = pillarRate('dapur', state.levels.dapur);
+  const c = pillarRate('makan', state.levels.makan);
+  const k = pillarRate('kasir', state.levels.kasir);
+  const mn = Math.min(p, c, k);
+  const imb = (Math.max(p,c,k) - mn) / Math.max(p,c,k);
+  let line;
+  if (imb < 0.2) line = HAPPY[Math.floor(Math.random()*HAPPY.length)];
+  else if (mn === p) line = SLOW_K[Math.floor(Math.random()*SLOW_K.length)];
+  else if (mn === k) line = SLOW_C[Math.floor(Math.random()*SLOW_C.length)];
+  else line = HAPPY[Math.floor(Math.random()*HAPPY.length)];
+
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble';
+  bubble.textContent = line;
+  const rect = el.getBoundingClientRect();
+  const sceneRect = document.getElementById('scene').getBoundingClientRect();
+  bubble.style.left = (rect.left - sceneRect.left) + 'px';
+  bubble.style.top  = (rect.top  - sceneRect.top - 44) + 'px';
+  document.getElementById('scene').appendChild(bubble);
+  setTimeout(() => bubble.remove(), 3200);
+}
+
+// ─── VISUAL EFFECTS ──────────────────────────────────────────────
+function spawnRipple(cx, cy, container) {
+  const rect = container.getBoundingClientRect();
+  const el = document.createElement('div');
+  el.className = 'tap-ripple';
+  el.style.left = (cx - rect.left - 5) + 'px';
+  el.style.top  = (cy - rect.top  - 5) + 'px';
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 500);
+}
+
+function spawnMoneyPop(income) {
+  const scene = document.getElementById('scene');
+  const el = document.createElement('div');
+  el.className = 'money-pop';
+  el.textContent = '+' + formatRp(income * (1000 / state.tickMs));
+  el.style.left  = (30 + Math.random() * 300) + 'px';
+  el.style.top   = (50 + Math.random() * 200) + 'px';
+  scene.appendChild(el);
+  setTimeout(() => el.remove(), 1000);
+}
+
+// ─── STORY / VN ──────────────────────────────────────────────────
+function checkStoryTriggers() {
+  for (let i = 0; i < STORY_PANELS.length; i++) {
+    const p = STORY_PANELS[i];
+    if (state.storyTriggered.has(i)) continue;
+    if (p.trigger === 'revenue' && state.lifetime >= p.value) {
+      state.storyTriggered.add(i);
+      state.vnQueue.push(p);
+    }
+    if (p.trigger === 'location' && state.locationIdx + 1 >= p.value) {
+      state.storyTriggered.add(i);
+      state.vnQueue.push(p);
+    }
+  }
+  if (!state.vnCurrent && state.vnQueue.length > 0) showNextVN();
+}
+
+function showNextVN() {
+  if (state.vnQueue.length === 0) return;
+  state.vnCurrent = state.vnQueue.shift();
+  state.vnLineIdx = 0;
+  const overlay = document.getElementById('vn-overlay');
+  overlay.classList.add('active');
+  document.getElementById('vn-bg').textContent = state.vnCurrent.bg;
+  document.getElementById('vn-character').textContent = state.vnCurrent.char;
+  displayVNLine();
+}
+
+function displayVNLine() {
+  const p = state.vnCurrent;
+  document.getElementById('vn-speaker').textContent = p.speaker;
+  document.getElementById('vn-text').textContent = p.lines[state.vnLineIdx];
+}
+
+function vnNext() {
+  if (!state.vnCurrent) return;
+  state.vnLineIdx++;
+  if (state.vnLineIdx >= state.vnCurrent.lines.length) {
+    document.getElementById('vn-overlay').classList.remove('active');
+    state.vnCurrent = null;
+    if (state.vnQueue.length > 0) setTimeout(showNextVN, 500);
+  } else {
+    displayVNLine();
+  }
+}
+
+// ─── EXPAND ──────────────────────────────────────────────────────
+function checkExpand() {
+  if (state.locationIdx >= LOCATIONS.length - 1) return;
+  const loc    = LOCATIONS[state.locationIdx];
+  const nextLoc= LOCATIONS[state.locationIdx + 1];
+  const allMaxed = Object.keys(state.levels).every(p => state.levels[p] >= loc.maxLv);
+  if (allMaxed && state.cash >= nextLoc.expandCost) {
+    state.cash -= nextLoc.expandCost;
+    state.locationIdx++;
+    state.prestigeMult *= 1.1; // +10% sesuai GDD
+    state.levels = { dapur: 1, makan: 1, kasir: 1 };
+    updateCustomers();
+    document.getElementById('location-badge').textContent = '📍 ' + LOCATIONS[state.locationIdx].name;
+    refreshUI();
+    // Trigger location story
+    checkStoryTriggers();
+  }
+}
+
+// ─── OFFLINE INCOME ──────────────────────────────────────────────
+function checkOfflineIncome() {
+  const last = parseInt(localStorage.getItem('inresto_last_login') || '0');
+  const now  = Date.now();
+  if (!last) { localStorage.setItem('inresto_last_login', now); return; }
+  const offlineSec = Math.min((now - last) / 1000, 604800);
+  if (offlineSec < 60) { localStorage.setItem('inresto_last_login', now); return; }
+
+  const rps = effectiveRPS() * (1000 / state.tickMs);
+  const earned = offlineSec * rps;
+  if (earned <= 0) { localStorage.setItem('inresto_last_login', now); return; }
+
+  document.getElementById('offline-amount').textContent = formatRp(earned);
+  document.getElementById('offline-duration').textContent = `Warteg lo jalan ${formatDuration(offlineSec)}`;
+  document.getElementById('offline-overlay').classList.add('active');
+  document.getElementById('offline-overlay').dataset.amount = earned;
+}
+
+function claimOffline(multiplier) {
+  const amount = parseFloat(document.getElementById('offline-overlay').dataset.amount || 0);
+  state.cash    += amount * multiplier;
+  state.lifetime += amount * multiplier;
+  document.getElementById('offline-overlay').classList.remove('active');
+  localStorage.setItem('inresto_last_login', Date.now());
+  refreshUI();
+}
+
+// ─── SAVE / LOAD ─────────────────────────────────────────────────
+function saveGame() {
+  localStorage.setItem('inresto_save', JSON.stringify({
+    cash: state.cash, lifetime: state.lifetime,
+    locationIdx: state.locationIdx, prestigeMult: state.prestigeMult,
+    levels: state.levels, storyTriggered: [...state.storyTriggered],
+  }));
+  localStorage.setItem('inresto_last_login', Date.now());
+}
+
+function loadGame() {
+  const raw = localStorage.getItem('inresto_save');
+  if (!raw) return;
+  try {
+    const s = JSON.parse(raw);
+    state.cash         = s.cash         || 200000;
+    state.lifetime     = s.lifetime     || 0;
+    state.locationIdx  = s.locationIdx  || 0;
+    state.prestigeMult = s.prestigeMult || 1;
+    state.levels       = s.levels       || { dapur:1, makan:1, kasir:1 };
+    state.storyTriggered = new Set(s.storyTriggered || []);
+    document.getElementById('location-badge').textContent = '📍 ' + LOCATIONS[state.locationIdx].name;
+  } catch(e) { console.warn('Save corrupt, starting fresh'); }
+}
+
+// ─── UI REFRESH ──────────────────────────────────────────────────
+function refreshUI() {
+  document.getElementById('cash-display').textContent = formatRp(state.cash);
+  const rps = effectiveRPS() * (1000 / state.tickMs);
+  document.getElementById('rps-display').textContent = '+' + formatRp(rps) + '/detik';
+
+  // Rush timer text
+  if (state.rushActive) {
+    document.getElementById('rush-timer').textContent = `🔥 Rush Hour! ${state.rushTimer.toFixed(1)}s`;
+  }
+  updateEnergyBar();
+
+  // Cards
+  ['dapur','makan','kasir'].forEach(p => {
+    const lv   = state.levels[p];
+    const loc  = LOCATIONS[state.locationIdx];
+    const maxLv= loc.maxLv;
+    const cost = upgradeCost(p, lv);
+    const canAfford = state.cash >= cost && lv < maxLv;
+
+    document.getElementById('lv-' + p).textContent = 'Lv. ' + lv + (lv >= maxLv ? ' MAX' : '');
+    document.getElementById('prog-' + p).style.width = ((lv / maxLv) * 100) + '%';
+    const costEl = document.getElementById('cost-' + p);
+    costEl.textContent = lv >= maxLv ? 'MAX' : formatRp(cost);
+    const btn = document.getElementById('btn-' + p);
+    btn.disabled = !canAfford;
+    btn.className = 'upgrade-btn' + (canAfford ? ' affordable' : '');
+  });
+
+  // Bottleneck
+  const p = pillarRate('dapur',  state.levels.dapur);
+  const c = pillarRate('makan',  state.levels.makan);
+  const k = pillarRate('kasir',  state.levels.kasir);
+  const mn  = Math.min(p, c, k);
+  const mx  = Math.max(p, c, k);
+  const imb = mx > 0 ? (mx - mn) / mx : 0;
+  let btEl  = document.getElementById('bottleneck-bar');
+  ['card-dapur','card-makan','card-kasir'].forEach(id => document.getElementById(id).classList.remove('bottleneck'));
+  if (imb < 0.15) {
+    btEl.textContent = '🟢 Semua lancar! Nilai optimal!';
+    btEl.style.color = '#4CAF50';
+  } else if (imb >= 0.35) {
+    if (mn === p) { btEl.textContent = '🔴 Dapur Kewalahan! Upgrade Dapur!'; document.getElementById('card-dapur').classList.add('bottleneck'); }
+    else if (mn === c) { btEl.textContent = '🔴 Gak Ada Tempat! Upgrade Area Makan!'; document.getElementById('card-makan').classList.add('bottleneck'); }
+    else { btEl.textContent = '🔴 Kasir Padat! Upgrade Kasir!'; document.getElementById('card-kasir').classList.add('bottleneck'); }
+    btEl.style.color = '#FF5722';
+  } else {
+    if (mn === p) btEl.textContent = '🟡 Dapur agak lambat';
+    else if (mn === c) btEl.textContent = '🟡 Meja mulai penuh';
+    else btEl.textContent = '🟡 Kasir mulai padat';
+    btEl.style.color = '#FF9800';
+  }
+}
+
+// ─── BOOT ────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  loadGame();
+  updateCustomers();
+  refreshUI();
+  checkOfflineIncome();
+
+  // Game loop
+  setInterval(gameTick, state.tickMs);
+  // Auto-save
+  setInterval(saveGame, 30000);
+  // Save on leave
+  window.addEventListener('beforeunload', saveGame);
+});
+</script>
+</body>
+</html>

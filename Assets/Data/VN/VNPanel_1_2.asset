@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b97b6c01afaf4f84dbffc39c073a14fa, type: 3}
+  m_Name: VNPanel_1_2
+  m_EditorClassIdentifier: 
+  panelId: 1.2
+  chapterTitle: Mimpi Cabang
+  triggerType: 0
+  triggerValue: 10000000
+  dialogs:
+  - speakerName: Nenek
+    characterSprite: {fileID: 0}
+    dialogueText: Kalau satu meja bisa penuh, suatu hari satu kota juga bisa kenal.
+    position: 2
+  backgroundSprite: {fileID: 0}
+  isSkippableOnReplay: 1
+  isPremiumOnly: 0
