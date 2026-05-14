@@ -42,6 +42,7 @@ Production docs:
 ```txt
 docs/ART_DIRECTION.md
 docs/ASSET_BIBLE.md
+docs/RESTAURANT_LAYOUT.md
 docs/ANIMATION_STRATEGY.md
 docs/GPT_IMAGE_PROMPTS.md
 ```

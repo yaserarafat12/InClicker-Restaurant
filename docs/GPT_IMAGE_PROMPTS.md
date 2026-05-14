@@ -174,10 +174,15 @@ Art direction:
 - subtle dark brown outlines
 - polished casual mobile game background
 - readable portrait composition
+- fixed portrait 2.5D front cutaway diorama
+- front view with slight 3/4 depth
+- not top-down
+- not flat side view
 - no characters
 - no UI
 - no text
 - no watermark
+- clear empty anchor zones for staff, customer queue, tap dish, and bottom UI
 
 Concept A: Warteg Gang Sempit
 - tiny warm warteg in a narrow local alley
@@ -199,6 +204,40 @@ Layout:
 - each concept vertical 9:16
 - leave top safe space for currency UI
 - leave bottom safe space for upgrade panel
+```
+
+## Batch 05B - Location 1 Layer Breakdown
+
+Generate only after a Location 1 concept is approved.
+
+```txt
+Create a layered 2D mobile game background asset set for Location 1, Warteg Gang Sempit, matching the approved reference style.
+
+Camera/layout:
+- fixed portrait 2.5D front cutaway diorama
+- front view with slight 3/4 depth
+- not top-down
+- not flat side view
+- no characters
+- no UI
+- no text
+- no watermark
+- clear anchor zones for staff behind counter, customer queue, tap dish, and bottom UI
+
+Create these separate layers in one clean sheet with large spacing:
+1. back wall layer: narrow alley wall, simple menu board without readable text, window/door frame
+2. lamp glow layer: warm hanging lamps and soft glow
+3. counter layer: glass warteg food display, rice cooker, trays, sambal jars
+4. table layer: simple wooden/plastic tables and stools for foreground/midground
+5. foreground props: tissue box, sauce bottles, small stool, floor details
+6. weather/ambience overlay: warm dust motes and light steam, separated
+
+Style:
+- premium cozy 2D cartoon
+- warm tungsten lighting
+- clean rounded shapes
+- subtle dark brown outlines
+- mobile game readable
 ```
 
 ## Batch 06 - UI And Logo Sheet
@@ -235,6 +274,45 @@ Composition:
 - clean sheet layout
 - separated assets with large spacing
 - game-ready mobile UI style
+```
+
+## Batch 06B - Upgrade Category Props
+
+Generate after Location 1 concept is approved.
+
+```txt
+Create a premium cozy 2D cartoon upgrade prop icon sheet for InClicker - Restaurant, matching the approved reference style.
+
+Purpose:
+These props represent visual sub-upgrade categories in the first warteg location. They support the current 3 core gameplay pillars: Dapur, Area Makan, and Kasir. They are not separate MVP gameplay cards yet.
+
+Requirements:
+- isolated props
+- transparent background or plain cream background
+- no text
+- no watermark
+- subtle dark brown outlines
+- warm soft shadows
+- readable at mobile size
+
+Create these exact props:
+1. old gas stove / kompor gas, for Alat Masak
+2. grandmother spice jar and sambal bowl, for Bahan & Rasa
+3. plastic stool and small wooden table, for Tempat Duduk
+4. old noisy fan / kipas angin, for Kenyamanan
+5. cardboard banner / terpal sign shape with no readable text, for Visibilitas
+
+Also include upgraded variants:
+6. better stove
+7. better spice rack
+8. better table and chair
+9. better wall fan
+10. cleaner storefront sign with no readable text
+
+Layout:
+- 5 by 2 grid
+- large spacing for cropping
+- consistent perspective matching the 2.5D front cutaway restaurant layout
 ```
 
 ## Batch 07 - Effects And Weather Sheet
@@ -297,4 +375,3 @@ Composition:
 - each panel 16:9 or 4:3 cinematic framing
 - consistent lighting and character style
 ```
-

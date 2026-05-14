@@ -118,6 +118,8 @@ Also create:
 
 Each location needs one 1080x1920 portrait concept first, then final layered background later.
 
+Camera/layout is locked in `docs/RESTAURANT_LAYOUT.md`: fixed portrait 2.5D front cutaway diorama. Do not generate top-down restaurants for the main game.
+
 | File | Location | Visual Beat |
 |---|---|---|
 | `location_01_warteg_gang.png` | Warteg Gang Sempit | tiny warm warteg, glass display, narrow alley |
@@ -133,14 +135,17 @@ Each location needs one 1080x1920 portrait concept first, then final layered bac
 
 Layered final target per location:
 
-- `back_wall`
-- `lamp_layer`
-- `counter_layer`
-- `table_layer`
-- `foreground_props`
-- `weather_overlay` if needed
+- `location_XX_back_wall.png`
+- `location_XX_lamps_glow.png`
+- `location_XX_counter.png`
+- `location_XX_staff_anchor_props.png`
+- `location_XX_tables.png`
+- `location_XX_foreground_props.png`
+- `location_XX_weather_overlay.png`
 
 For MVP, only location 1 needs final layering. Other locations can stay concept art until gameplay reaches them.
+
+Important: characters and customers must not be baked into final location backgrounds. They are separate sprites so Unity can animate and reposition them.
 
 ## Phase 6 - UI And Logo
 
@@ -167,6 +172,39 @@ UI style:
 - dark warm outline,
 - readable labels,
 - no decorative clutter.
+
+## Upgrade Visual Categories
+
+The current Unity MVP should keep the 3 core pillars:
+
+- Dapur: production
+- Area Makan: capacity / seating
+- Kasir: conversion / payment
+
+The older GDD's 5 universal upgrade categories are not replacing those pillars for MVP. They are visual/sub-upgrade language that can sit under the 3-pillar system later.
+
+Mapping:
+
+- Alat Masak and Bahan & Rasa support Dapur.
+- Tempat Duduk and Kenyamanan support Area Makan.
+- Visibilitas supports demand, queue, reputation, and later Kasir/traffic systems.
+
+This keeps the math simple now while still letting the restaurant visually evolve with richer props.
+
+| Category | Location 1 Visual | Asset Need |
+|---|---|---|
+| Alat Masak | Kompor gas / old stove | stove prop, cooking sparkle, kitchen upgrade icon |
+| Bahan & Rasa | Bumbu Dapur Nenek | spice jar, sambal, ingredient icon |
+| Tempat Duduk | Bangku plastik / table | chair/table prop variants |
+| Kenyamanan | Kipas angin berisik | fan prop, comfort icon |
+| Visibilitas | Terpal / spanduk karton | sign/banner prop without readable text |
+
+Asset implication:
+
+- Location backgrounds should leave room for these props to visually upgrade.
+- Do not bake all upgrade props permanently into the base background.
+- Generate upgrade props separately when the location base is approved.
+- Do not refactor MVP gameplay from 3 pillars to 5 cards yet.
 
 ## Phase 7 - Effects And Weather
 
@@ -220,4 +258,3 @@ VN style:
 - Prefer cream background for sheets, transparent background for final sprites/icons.
 - Keep each asset centered and uncropped.
 - For sheets: leave large spacing for easy crop.
-
